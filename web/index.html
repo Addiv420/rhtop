@@ -31,17 +31,20 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <h1 class="text-2xl font-bold text-blue-400">rhtop</h1>
-                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">Connected</span>
+                <span id="connection-status" class="bg-red-600 text-white px-3 py-1 rounded-full text-sm">Disconnected</span>
             </div>
             <div class="flex items-center space-x-4">
                 <div class="text-sm text-gray-400">
-                    <span class="font-semibold">Uptime:</span> 5d 12h 34m
+                    <span class="font-semibold">Uptime:</span> <span id="uptime">Loading...</span>
                 </div>
                 <div class="text-sm text-gray-400">
-                    <span class="font-semibold">Load:</span> 1.23, 1.45, 1.67
+                    <span class="font-semibold">Load:</span> <span id="load-avg">Loading...</span>
                 </div>
-                <button class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition-colors">
-                    Settings
+                <button onclick="toggleAutoRefresh()" id="auto-refresh-btn" class="bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors">
+                    Auto-Refresh: ON
+                </button>
+                <button onclick="refreshData()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition-colors">
+                    Manual Refresh
                 </button>
             </div>
         </div>
@@ -54,15 +57,15 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-100">CPU</h3>
-                    <span class="text-2xl font-bold text-blue-400">73%</span>
+                    <span id="cpu-percentage" class="text-2xl font-bold text-blue-400">0%</span>
                 </div>
                 <div class="w-full bg-gray-700 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full" style="width: 73%"></div>
+                    <div id="cpu-bar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <div class="mt-3 text-sm text-gray-400">
                     <div class="flex justify-between">
-                        <span>User: 45%</span>
-                        <span>System: 28%</span>
+                        <span id="cpu-user">User: 0%</span>
+                        <span id="cpu-system">System: 0%</span>
                     </div>
                 </div>
             </div>
@@ -71,15 +74,15 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-100">Memory</h3>
-                    <span class="text-2xl font-bold text-green-400">6.2/16 GB</span>
+                    <span id="memory-usage" class="text-2xl font-bold text-green-400">0/0 GB</span>
                 </div>
                 <div class="w-full bg-gray-700 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full" style="width: 39%"></div>
+                    <div id="memory-bar" class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <div class="mt-3 text-sm text-gray-400">
                     <div class="flex justify-between">
-                        <span>Used: 39%</span>
-                        <span>Available: 61%</span>
+                        <span id="memory-used">Used: 0%</span>
+                        <span id="memory-free">Free: 0%</span>
                     </div>
                 </div>
             </div>
@@ -88,15 +91,15 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-100">Disk</h3>
-                    <span class="text-2xl font-bold text-yellow-400">127/500 GB</span>
+                    <span id="disk-usage" class="text-2xl font-bold text-yellow-400">0/0 GB</span>
                 </div>
                 <div class="w-full bg-gray-700 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-3 rounded-full" style="width: 25%"></div>
+                    <div id="disk-bar" class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <div class="mt-3 text-sm text-gray-400">
                     <div class="flex justify-between">
-                        <span>Used: 25%</span>
-                        <span>Free: 75%</span>
+                        <span id="disk-used">Used: 0%</span>
+                        <span id="disk-free">Free: 0%</span>
                     </div>
                 </div>
             </div>
@@ -110,13 +113,37 @@
                 <div class="space-y-2">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-400">↑ Upload:</span>
-                        <span class="text-green-400">1.2 MB/s</span>
+                        <span id="network-up" class="text-green-400">0 KB/s</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-400">↓ Download:</span>
-                        <span class="text-blue-400">5.7 MB/s</span>
+                        <span id="network-down" class="text-blue-400">0 KB/s</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Process Control Panel -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-100 mb-4">Process Management</h3>
+            <div class="flex flex-wrap gap-4">
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="program-input" placeholder="Program name (e.g., firefox)" 
+                           class="bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button onclick="startProgram()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm transition-colors">
+                        Start Program
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="number" id="kill-pid-input" placeholder="PID to kill" 
+                           class="bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    <button onclick="killProcess()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm transition-colors">
+                        Kill Process
+                    </button>
+                </div>
+            </div>
+            <div id="action-feedback" class="mt-4 hidden">
+                <div class="p-3 rounded-lg" id="feedback-content"></div>
             </div>
         </div>
 
@@ -124,106 +151,38 @@
         <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-700">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold text-gray-100">Processes</h2>
+                    <h2 class="text-xl font-semibold text-gray-100">
+                        Processes <span id="process-count" class="text-sm text-gray-400">(0)</span>
+                    </h2>
                     <div class="flex space-x-2">
-                        <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors">
-                            Kill Process
-                        </button>
-                        <button class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition-colors">
-                            Refresh
+                        <select id="sort-select" onchange="sortProcesses()" class="bg-gray-700 border border-gray-600 text-gray-100 rounded-lg px-3 py-2 text-sm">
+                            <option value="cpu">Sort by CPU</option>
+                            <option value="memory">Sort by Memory</option>
+                            <option value="pid">Sort by PID</option>
+                            <option value="name">Sort by Name</option>
+                        </select>
+                        <button onclick="refreshProcesses()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors">
+                            Refresh Processes
                         </button>
                     </div>
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-750">
+                    <thead class="bg-gray-750 sticky top-0">
                         <tr class="border-b border-gray-700">
                             <th class="px-6 py-3 text-left text-gray-300 font-medium">PID</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">User</th>
+                            <th class="px-6 py-3 text-left text-gray-300 font-medium">Name</th>
                             <th class="px-6 py-3 text-left text-gray-300 font-medium">CPU%</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">MEM%</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">VSZ</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">RSS</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">TTY</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">STAT</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">TIME</th>
-                            <th class="px-6 py-3 text-left text-gray-300 font-medium">Command</th>
+                            <th class="px-6 py-3 text-left text-gray-300 font-medium">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-700">
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">1234</td>
-                            <td class="px-6 py-4">root</td>
-                            <td class="px-6 py-4 text-red-400 font-semibold">25.3</td>
-                            <td class="px-6 py-4 text-yellow-400">12.1</td>
-                            <td class="px-6 py-4">2.1G</td>
-                            <td class="px-6 py-4">512M</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">12:34</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">nginx: worker process</td>
-                        </tr>
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">5678</td>
-                            <td class="px-6 py-4">www-data</td>
-                            <td class="px-6 py-4 text-red-400 font-semibold">18.7</td>
-                            <td class="px-6 py-4 text-yellow-400">8.4</td>
-                            <td class="px-6 py-4">1.8G</td>
-                            <td class="px-6 py-4">256M</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">08:45</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">php-fpm: pool www</td>
-                        </tr>
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">9012</td>
-                            <td class="px-6 py-4">mysql</td>
-                            <td class="px-6 py-4 text-orange-400 font-semibold">15.2</td>
-                            <td class="px-6 py-4 text-yellow-400">24.8</td>
-                            <td class="px-6 py-4">3.2G</td>
-                            <td class="px-6 py-4">1.2G</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">45:12</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">mysqld</td>
-                        </tr>
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">3456</td>
-                            <td class="px-6 py-4">redis</td>
-                            <td class="px-6 py-4 text-green-400">2.1</td>
-                            <td class="px-6 py-4 text-green-400">3.2</td>
-                            <td class="px-6 py-4">512M</td>
-                            <td class="px-6 py-4">128M</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">02:18</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">redis-server</td>
-                        </tr>
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">7890</td>
-                            <td class="px-6 py-4">node</td>
-                            <td class="px-6 py-4 text-orange-400 font-semibold">11.8</td>
-                            <td class="px-6 py-4 text-yellow-400">6.7</td>
-                            <td class="px-6 py-4">1.4G</td>
-                            <td class="px-6 py-4">256M</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">15:27</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">node /app/server.js</td>
-                        </tr>
-                        <tr class="hover:bg-gray-750 transition-colors cursor-pointer">
-                            <td class="px-6 py-4 text-blue-400">2468</td>
-                            <td class="px-6 py-4">root</td>
-                            <td class="px-6 py-4 text-green-400">0.8</td>
-                            <td class="px-6 py-4 text-green-400">1.2</td>
-                            <td class="px-6 py-4">128M</td>
-                            <td class="px-6 py-4">32M</td>
-                            <td class="px-6 py-4">?</td>
-                            <td class="px-6 py-4 text-green-400">S</td>
-                            <td class="px-6 py-4">00:45</td>
-                            <td class="px-6 py-4 text-gray-300 truncate max-w-xs">systemd</td>
+                    <tbody id="process-table-body" class="divide-y divide-gray-700">
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                                Loading processes...
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -235,76 +194,342 @@
             <!-- System Info -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-100 mb-4">System Information</h3>
-                <div class="space-y-3">
+                <div class="space-y-3" id="system-info">
                     <div class="flex justify-between">
-                        <span class="text-gray-400">Hostname:</span>
-                        <span class="text-gray-100">web-server-01</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">OS:</span>
-                        <span class="text-gray-100">Ubuntu 22.04.3 LTS</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Kernel:</span>
-                        <span class="text-gray-100">5.15.0-84-generic</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Architecture:</span>
-                        <span class="text-gray-100">x86_64</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">CPU:</span>
-                        <span class="text-gray-100">Intel Xeon E5-2680 v4</span>
+                        <span class="text-gray-400">Status:</span>
+                        <span class="text-gray-100">Loading...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
+            <!-- API Status -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-100 mb-4">Quick Actions</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors">
-                        Restart Services
-                    </button>
-                    <button class="bg-green-600 hover:bg-green-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors">
-                        Clear Cache
-                    </button>
-                    <button class="bg-yellow-600 hover:bg-yellow-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors">
-                        System Update
-                    </button>
-                    <button class="bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg text-sm font-medium transition-colors">
-                        Reboot System
-                    </button>
+                <h3 class="text-lg font-semibold text-gray-100 mb-4">API Status</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Backend URL:</span>
+                        <span id="api-url" class="text-gray-100">http://localhost:8080</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Last Update:</span>
+                        <span id="last-update" class="text-gray-100">Never</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Refresh Rate:</span>
+                        <span class="text-gray-100">2 seconds</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Requests Made:</span>
+                        <span id="request-count" class="text-gray-100">0</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Simulate real-time updates
-        function updateStats() {
-            const cpuUsage = Math.floor(Math.random() * 30) + 60;
-            const memoryUsage = Math.floor(Math.random() * 20) + 30;
-            const diskUsage = Math.floor(Math.random() * 10) + 20;
-            
-            document.querySelector('.bg-gradient-to-r.from-blue-500').style.width = cpuUsage + '%';
-            document.querySelector('.bg-gradient-to-r.from-green-500').style.width = memoryUsage + '%';
-            document.querySelector('.bg-gradient-to-r.from-yellow-500').style.width = diskUsage + '%';
-            
-            document.querySelector('.text-blue-400:first-of-type').textContent = cpuUsage + '%';
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8080';
+        let autoRefresh = true;
+        let refreshInterval;
+        let requestCount = 0;
+        let processes = [];
+
+        // DOM Elements
+        const connectionStatus = document.getElementById('connection-status');
+        const processTableBody = document.getElementById('process-table-body');
+        const processCount = document.getElementById('process-count');
+        const lastUpdate = document.getElementById('last-update');
+        const requestCountEl = document.getElementById('request-count');
+        const actionFeedback = document.getElementById('action-feedback');
+        const feedbackContent = document.getElementById('feedback-content');
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            if (connected) {
+                connectionStatus.textContent = 'Connected';
+                connectionStatus.className = 'bg-green-600 text-white px-3 py-1 rounded-full text-sm';
+            } else {
+                connectionStatus.textContent = 'Disconnected';
+                connectionStatus.className = 'bg-red-600 text-white px-3 py-1 rounded-full text-sm';
+            }
         }
 
-        // Update every 2 seconds
-        setInterval(updateStats, 2000);
+        // Show feedback message
+        function showFeedback(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-800 text-green-200 border border-green-600',
+                error: 'bg-red-800 text-red-200 border border-red-600',
+                info: 'bg-blue-800 text-blue-200 border border-blue-600'
+            };
+            
+            feedbackContent.textContent = message;
+            feedbackContent.className = `p-3 rounded-lg ${colors[type]}`;
+            actionFeedback.classList.remove('hidden');
+            
+            setTimeout(() => {
+                actionFeedback.classList.add('hidden');
+            }, 5000);
+        }
 
-        // Add click handlers for process rows
-        document.querySelectorAll('tbody tr').forEach(row => {
-            row.addEventListener('click', function() {
-                // Remove previous selection
-                document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('bg-blue-900'));
-                // Add selection to clicked row
-                this.classList.add('bg-blue-900');
+        // API call wrapper
+        async function apiCall(endpoint, options = {}) {
+            try {
+                requestCount++;
+                requestCountEl.textContent = requestCount;
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                updateConnectionStatus(true);
+                lastUpdate.textContent = new Date().toLocaleTimeString();
+                
+                return await response.json();
+            } catch (error) {
+                console.error(`API call failed for ${endpoint}:`, error);
+                updateConnectionStatus(false);
+                throw error;
+            }
+        }
+
+        // Fetch processes from API
+        async function fetchProcesses() {
+            try {
+                const data = await apiCall('/processes');
+                processes = data;
+                updateProcessTable();
+            } catch (error) {
+                showFeedback(`Failed to fetch processes: ${error.message}`, 'error');
+                processTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-red-400">
+                            Error loading processes: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Update process table
+        function updateProcessTable() {
+            if (processes.length === 0) {
+                processTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                            No processes found
+                        </td>
+                    </tr>
+                `;
+                processCount.textContent = '(0)';
+                return;
+            }
+
+            processCount.textContent = `(${processes.length})`;
+            
+            processTableBody.innerHTML = processes.map(process => {
+                const cpuColor = process.cpu > 10 ? 'text-red-400' : 
+                               process.cpu > 5 ? 'text-yellow-400' : 'text-green-400';
+                
+                return `
+                    <tr class="hover:bg-gray-750 transition-colors">
+                        <td class="px-6 py-4 text-blue-400 font-mono">${process.pid}</td>
+                        <td class="px-6 py-4 text-gray-300">${process.name}</td>
+                        <td class="px-6 py-4 ${cpuColor} font-semibold">${process.cpu.toFixed(1)}%</td>
+                        <td class="px-6 py-4">
+                            <button onclick="killProcessById(${process.pid})" 
+                                    class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs transition-colors">
+                                Kill
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Sort processes
+        function sortProcesses() {
+            const sortBy = document.getElementById('sort-select').value;
+            
+            processes.sort((a, b) => {
+                switch (sortBy) {
+                    case 'cpu':
+                        return b.cpu - a.cpu;
+                    case 'memory':
+                        return (b.memory || 0) - (a.memory || 0);
+                    case 'pid':
+                        return a.pid - b.pid;
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    default:
+                        return 0;
+                }
             });
+            
+            updateProcessTable();
+        }
+
+        // Kill process by PID
+        async function killProcessById(pid) {
+            if (!confirm(`Are you sure you want to kill process ${pid}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/kill', {
+                    method: 'POST',
+                    body: JSON.stringify({ pid: pid })
+                });
+                
+                showFeedback(`Process ${pid} killed successfully`, 'success');
+                
+                // Remove from local array and update table
+                processes = processes.filter(p => p.pid !== pid);
+                updateProcessTable();
+                
+                // Refresh processes after a short delay
+                setTimeout(fetchProcesses, 1000);
+            } catch (error) {
+                showFeedback(`Failed to kill process ${pid}: ${error.message}`, 'error');
+            }
+        }
+
+        // Kill process from input
+        async function killProcess() {
+            const pidInput = document.getElementById('kill-pid-input');
+            const pid = parseInt(pidInput.value);
+            
+            if (!pid || isNaN(pid)) {
+                showFeedback('Please enter a valid PID', 'error');
+                return;
+            }
+            
+            await killProcessById(pid);
+            pidInput.value = '';
+        }
+
+        // Start program
+        async function startProgram() {
+            const programInput = document.getElementById('program-input');
+            const program = programInput.value.trim();
+            
+            if (!program) {
+                showFeedback('Please enter a program name', 'error');
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/start', {
+                    method: 'POST',
+                    body: JSON.stringify({ program: program })
+                });
+                
+                showFeedback(`Program "${program}" started successfully`, 'success');
+                programInput.value = '';
+                
+                // Refresh processes after a short delay
+                setTimeout(fetchProcesses, 1000);
+            } catch (error) {
+                showFeedback(`Failed to start program "${program}": ${error.message}`, 'error');
+            }
+        }
+
+        // Simulate system stats (replace with real API calls when available)
+        function updateSystemStats() {
+            // This would normally come from your C++ API
+            const cpu = Math.floor(Math.random() * 30) + 50;
+            const memory = Math.floor(Math.random() * 40) + 30;
+            const disk = Math.floor(Math.random() * 20) + 20;
+            
+            document.getElementById('cpu-percentage').textContent = cpu + '%';
+            document.getElementById('cpu-bar').style.width = cpu + '%';
+            document.getElementById('cpu-user').textContent = `User: ${Math.floor(cpu * 0.6)}%`;
+            document.getElementById('cpu-system').textContent = `System: ${Math.floor(cpu * 0.4)}%`;
+            
+            const memUsed = (memory * 16) / 100;
+            document.getElementById('memory-usage').textContent = `${memUsed.toFixed(1)}/16 GB`;
+            document.getElementById('memory-bar').style.width = memory + '%';
+            document.getElementById('memory-used').textContent = `Used: ${memory}%`;
+            document.getElementById('memory-free').textContent = `Free: ${100-memory}%`;
+            
+            const diskUsed = (disk * 500) / 100;
+            document.getElementById('disk-usage').textContent = `${diskUsed.toFixed(0)}/500 GB`;
+            document.getElementById('disk-bar').style.width = disk + '%';
+            document.getElementById('disk-used').textContent = `Used: ${disk}%`;
+            document.getElementById('disk-free').textContent = `Free: ${100-disk}%`;
+            
+            document.getElementById('network-up').textContent = `${(Math.random() * 1000).toFixed(0)} KB/s`;
+            document.getElementById('network-down').textContent = `${(Math.random() * 5000).toFixed(0)} KB/s`;
+        }
+
+        // Toggle auto refresh
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            const btn = document.getElementById('auto-refresh-btn');
+            
+            if (autoRefresh) {
+                btn.textContent = 'Auto-Refresh: ON';
+                btn.className = 'bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors';
+                startAutoRefresh();
+            } else {
+                btn.textContent = 'Auto-Refresh: OFF';
+                btn.className = 'bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition-colors';
+                stopAutoRefresh();
+            }
+        }
+
+        // Start auto refresh
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                if (autoRefresh) {
+                    fetchProcesses();
+                    updateSystemStats();
+                }
+            }, 2000);
+        }
+
+        // Stop auto refresh
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        // Manual refresh
+        function refreshData() {
+            fetchProcesses();
+            updateSystemStats();
+        }
+
+        // Refresh only processes
+        function refreshProcesses() {
+            fetchProcesses();
+        }
+
+        // Enter key handlers
+        document.getElementById('kill-pid-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') killProcess();
+        });
+
+        document.getElementById('program-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') startProgram();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchProcesses();
+            updateSystemStats();
+            startAutoRefresh();
         });
     </script>
 </body>
