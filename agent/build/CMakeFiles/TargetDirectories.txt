@@ -1,0 +1,3 @@
+/media/SSD/git/rhtop/agent/build/CMakeFiles/agent.dir
+/media/SSD/git/rhtop/agent/build/CMakeFiles/edit_cache.dir
+/media/SSD/git/rhtop/agent/build/CMakeFiles/rebuild_cache.dir
